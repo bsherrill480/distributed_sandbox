@@ -7,12 +7,24 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 var NodeCache = require('node-cache');
 var sqlite3 = require('sqlite3');
-sqlite3.verbose();
+var _ = require('lodash');
+
 var myCache = new NodeCache({ checkperiod: 0, useClones: false }); // MAX PERFORMANCE!
-var db = new sqlite3.Database('ski_read.db', sqlite3.OPEN_READONLY, function (err) {
+var read_db = new sqlite3.Database('ski_read.db', sqlite3.OPEN_READONLY, function (err) {
   if (err) {
     console.log('dbErr', err);
   }
+});
+// var write_db = new sqlite3.Database('ski_write.db', sqlite3.OPEN_READWRITE, function (err) {
+var in_memory_write_db = new sqlite3.Database(':memory:', sqlite3.OPEN_READWRITE, function (err) {
+  if (err) {
+    console.log('writeDbErr', err);
+  }
+  else { // use for in memory application
+    in_memory_write_db.run('CREATE TABLE rides(resort_id int, day int, skier_id int, lift_id int, time' +
+        ' int); CREATE INDEX skier_id_idx ON rides(skier_id);');
+  }
+  // write_db.run('DELETE FROM rides');
 });
 
 function getCacheKey(skierId, dayNum) {
@@ -38,7 +50,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use('/', routes);
 // app.use('/users', users);
 app.post('/load', function (req, res) {
-  return res.json({foo: 'bar'});
+  var { resortId, day, skierId, liftId, time } = req.body;
+  var params = [resortId, day, skierId, liftId, time];
+  var valid = params.reduce((okay, value) => okay && value, true);
+  if (valid) {
+    in_memory_write_db.run('INSERT INTO rides VALUES (?, ?, ?, ?, ?)', params);
+    return res.send('okay');
+  } else {
+    res.status(400).send('bad');
+  }
 });
 
 function liftIdToVert(liftId) {
@@ -77,7 +97,7 @@ app.get('/myvert/:skierId/:dayNum', function (req, res) {
     if (cacheResult) {
       res.send(cacheResult);
     } else {
-      db.all(
+      read_db.all(
           'SELECT lift_id, COUNT(*) FROM rides WHERE skier_id=? AND day=? GROUP BY lift_id', 
           [params.skierId, params.dayNum], 
           function (err, results) {

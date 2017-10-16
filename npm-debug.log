@@ -1,5 +1,5 @@
 0 info it worked if it ends with ok
-1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'run', 'start' ]
+1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'start' ]
 2 info using npm@3.10.8
 3 info using node@v6.8.1
 4 verbose run-script [ 'prestart', 'start', 'poststart' ]
@@ -25,7 +25,7 @@
 15 verbose pkgid hw@0.0.0
 16 verbose cwd /home/brian/WebDev/distributed/hw
 17 error Linux 4.10.0-35-generic
-18 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "run" "start"
+18 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "start"
 19 error node v6.8.1
 20 error npm  v3.10.8
 21 error code ELIFECYCLE
